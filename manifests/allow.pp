@@ -77,15 +77,15 @@ define ufw::allow(
   }
 
   $grep_existing_rule = "${ipadr}:${port}" ? {
-    'any:all'    => "grep -qE ' +ALLOW ${direction}} +${from_match}$'",
+    'any:all'    => "grep -qE ' +ALLOW ${direction} +${from_match}$'",
     /[0-9]:all$/ => "grep -qE '^${ipadr}${proto_match} +ALLOW +${from_match}${from_proto_match}$'",
     /^any:[0-9]/ => "grep -qE '^${port}${proto_match} +ALLOW +${from_match}$'",
     default      => "grep -qE '^${ipadr} ${port}${proto_match} +ALLOW +${from_match}$'",
   }
 
   $rule = $port ? {
-    'all'   => "allow ${direction}} ${on_clause} proto ${proto} from ${from} to ${ipadr}",
-    default => "allow ${direction}} ${on_clause} proto ${proto} from ${from} to ${ipadr} port ${port}",
+    'all'   => "allow ${direction} ${on_clause} proto ${proto} from ${from} to ${ipadr}",
+    default => "allow ${direction} ${on_clause} proto ${proto} from ${from} to ${ipadr} port ${port}",
   }
 
   if $ensure == 'absent' {
