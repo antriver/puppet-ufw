@@ -89,8 +89,8 @@ define ufw::allow(
   }
 
   $rule = $port ? {
-    'all'   => "allow ${dir} proto ${proto} ${on_clause} from ${from} to ${ipadr}",
-    default => "allow ${dir} proto ${proto} ${on_clause} from ${from} to ${ipadr} port ${port}",
+    'all'   => "allow ${dir} ${on_clause} proto ${proto} from ${from} to ${ipadr}",
+    default => "allow ${dir} ${on_clause} proto ${proto} from ${from} to ${ipadr} port ${port}",
   }
 
   if $ensure == 'absent' {

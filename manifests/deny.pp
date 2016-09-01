@@ -69,8 +69,8 @@ define ufw::deny(
   }
 
   $command = $port ? {
-    'all'   => "ufw deny ${dir} proto ${proto} ${on_clause} }from ${from} to ${ipadr}",
-    default => "ufw deny ${dir} proto ${proto} ${on_clause} from ${from} to ${ipadr} port ${port}",
+    'all'   => "ufw deny ${dir} ${on_clause} proto ${proto} from ${from} to ${ipadr}",
+    default => "ufw deny ${dir} ${on_clause} proto ${proto} from ${from} to ${ipadr} port ${port}",
   }
 
   $unless    = $port ? {
