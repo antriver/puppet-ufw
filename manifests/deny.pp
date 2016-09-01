@@ -14,18 +14,21 @@
 # @param ip (String) Ip address to deny access to. default: ''
 # @param port (String) Port to act on. default: all
 # @param proto (String) Protocol to use. default: tcp
+# @param interface (String) Interface listen for connections to be on. default: ''
 define ufw::deny(
   $direction ='IN',
   $from = 'any',
   $ip = '',
   $port = 'all',
   $proto = 'tcp',
+  $interface = ''
 ) {
   validate_re($direction, 'IN|OUT')
   validate_re($proto, 'tcp|udp')
   validate_string($from,
     $ip,
-    $port
+    $port,
+    $interface
   )
 
   $dir = $direction ? {
@@ -60,9 +63,14 @@ define ufw::deny(
     default => $from,
   }
 
+  $on_clause = $interface ? {
+    ''   => '',
+    default => "on ${interface}"
+  }
+
   $command = $port ? {
-    'all'   => "ufw deny ${dir} proto ${proto} from ${from} to ${ipadr}",
-    default => "ufw deny ${dir} proto ${proto} from ${from} to ${ipadr} port ${port}",
+    'all'   => "ufw deny ${dir} proto ${proto} ${on_clause} }from ${from} to ${ipadr}",
+    default => "ufw deny ${dir} proto ${proto} ${on_clause} from ${from} to ${ipadr} port ${port}",
   }
 
   $unless    = $port ? {
@@ -70,7 +78,7 @@ define ufw::deny(
     default => "ufw status | grep -qEe '^${ipadr_match} ${port}/${proto} +DENY ${dir} +${from_match}( +.*)?$' -qe '^${port}/${proto} +DENY +${from_match}( +.*)?$'", # lint:ignore:140chars
   }
 
-  exec { "ufw-deny-${direction}-${proto}-from-${from}-to-${ipadr}-port-${port}":
+  exec { "ufw-deny-${direction}-${proto}-${interface}-from-${from}-to-${ipadr}-port-${port}":
     command  => $command,
     path     => '/usr/sbin:/bin:/usr/bin',
     provider => 'posix',

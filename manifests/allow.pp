@@ -15,6 +15,7 @@
 # @param ip (String) Ip address to allow access to. default: ''
 # @param port (String) Port to act on. default: all
 # @param proto (String) Protocol to use. default: tcp
+# @param interface (String) Interface listen for connections to be on. default: ''
 define ufw::allow(
   $direction ='IN',
   $ensure ='present',
@@ -22,6 +23,7 @@ define ufw::allow(
   $ip = '',
   $port = 'all',
   $proto = 'tcp',
+  $interface = ''
 ) {
   validate_re($direction, 'IN|OUT')
   validate_re($ensure, 'absent|present')
@@ -74,6 +76,11 @@ define ufw::allow(
     default => $proto_match,
   }
 
+  $on_clause = $interface ? {
+    ''   => '',
+    default => "on ${interface}"
+  }
+
   $grep_existing_rule = "${ipadr}:${port}" ? {
     'any:all'    => "grep -qE ' +ALLOW ${dir} +${from_match}$'",
     /[0-9]:all$/ => "grep -qE '^${ipadr}${proto_match} +ALLOW +${from_match}${from_proto_match}$'",
@@ -82,8 +89,8 @@ define ufw::allow(
   }
 
   $rule = $port ? {
-    'all'   => "allow ${dir} proto ${proto} from ${from} to ${ipadr}",
-    default => "allow ${dir} proto ${proto} from ${from} to ${ipadr} port ${port}",
+    'all'   => "allow ${dir} proto ${proto} ${on_clause} from ${from} to ${ipadr}",
+    default => "allow ${dir} proto ${proto} ${on_clause} from ${from} to ${ipadr} port ${port}",
   }
 
   if $ensure == 'absent' {
