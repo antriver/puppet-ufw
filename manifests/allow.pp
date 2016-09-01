@@ -33,6 +33,11 @@ define ufw::allow(
     $port
   )
 
+  $dir = $direction ? {
+    'OUT'   => 'out',
+    'IN'    => 'in'
+  }
+
   if $ip == '' {
     $ipadr = pick($::ipaddress_eth0, $::ipaddress, 'any')
   } else {
@@ -77,15 +82,15 @@ define ufw::allow(
   }
 
   $grep_existing_rule = "${ipadr}:${port}" ? {
-    'any:all'    => "grep -qE ' +ALLOW ${direction} +${from_match}$'",
+    'any:all'    => "grep -qE ' +ALLOW ${dir} +${from_match}$'",
     /[0-9]:all$/ => "grep -qE '^${ipadr}${proto_match} +ALLOW +${from_match}${from_proto_match}$'",
     /^any:[0-9]/ => "grep -qE '^${port}${proto_match} +ALLOW +${from_match}$'",
     default      => "grep -qE '^${ipadr} ${port}${proto_match} +ALLOW +${from_match}$'",
   }
 
   $rule = $port ? {
-    'all'   => "allow ${direction} ${on_clause} proto ${proto} from ${from} to ${ipadr}",
-    default => "allow ${direction} ${on_clause} proto ${proto} from ${from} to ${ipadr} port ${port}",
+    'all'   => "allow ${dir} ${on_clause} proto ${proto} from ${from} to ${ipadr}",
+    default => "allow ${dir} ${on_clause} proto ${proto} from ${from} to ${ipadr} port ${port}",
   }
 
   if $ensure == 'absent' {
@@ -105,7 +110,7 @@ define ufw::allow(
     $command = "ufw ${rule}"
     $unless  = "${ipadr}:${port}" ? {
       'any:all'    => "ufw status | grep -qE ' +ALLOW +${from_match}${proto_match}$'",
-      #'any:all'    => "ufw status | grep -qE ' +ALLOW ${direction} +${from_match}( +.*)?$'",
+      #'any:all'    => "ufw status | grep -qE ' +ALLOW ${dir} +${from_match}( +.*)?$'",
       /[0-9]:all$/ => "ufw status | grep -qE '^${ipadr_match}${proto_match} +ALLOW +${from_match}${from_proto_match}( +.*)?$'",
       /^any:[0-9]/ => "ufw status | grep -qE '^${port}${proto_match} +ALLOW +${from_match}( +.*)?$'",
       default      => "ufw status | grep -qE '^${ipadr_match} ${port}${proto_match} +ALLOW +${from_match}( +.*)?$'",

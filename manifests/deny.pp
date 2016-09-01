@@ -31,6 +31,11 @@ define ufw::deny(
     $interface
   )
 
+  $dir = $direction ? {
+    'OUT'   => 'out',
+    'IN'    => 'in'
+  }
+
   # For 'deny' action, the default is to deny to any address
   $ipadr = $ip ? {
     ''      => 'any',
@@ -64,13 +69,13 @@ define ufw::deny(
   }
 
   $command = $port ? {
-    'all'   => "ufw deny ${direction} ${on_clause} proto ${proto} from ${from} to ${ipadr}",
-    default => "ufw deny ${direction} ${on_clause} proto ${proto} from ${from} to ${ipadr} port ${port}",
+    'all'   => "ufw deny ${dir} ${on_clause} proto ${proto} from ${from} to ${ipadr}",
+    default => "ufw deny ${dir} ${on_clause} proto ${proto} from ${from} to ${ipadr} port ${port}",
   }
 
   $unless    = $port ? {
-    'all'   => "ufw status | grep -qE '${ipadr_match}/${proto} +DENY ${direction} +${from_match}'",
-    default => "ufw status | grep -qEe '^${ipadr_match} ${port}/${proto} +DENY ${direction} +${from_match}( +.*)?$' -qe '^${port}/${proto} +DENY +${from_match}( +.*)?$'", # lint:ignore:140chars
+    'all'   => "ufw status | grep -qE '${ipadr_match}/${proto} +DENY ${dir} +${from_match}'",
+    default => "ufw status | grep -qEe '^${ipadr_match} ${port}/${proto} +DENY ${dir} +${from_match}( +.*)?$' -qe '^${port}/${proto} +DENY +${from_match}( +.*)?$'", # lint:ignore:140chars
   }
 
   exec { "ufw-deny-${direction}-${proto}-${interface}-from-${from}-to-${ipadr}-port-${port}":
